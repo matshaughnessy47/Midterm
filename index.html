@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>U.S. Rest Stops & Buc-ee's Analysis</title>
+
+<link
+rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    overflow:hidden;
+}
+
+#header{
+    background:#1f4b6e;
+    color:white;
+    text-align:center;
+    padding:15px;
+}
+
+#map{
+    height:calc(100vh - 155px);
+    width:100%;
+}
+.analysis-box{
+    background:white;
+    padding:10px;
+    border-radius:5px;
+    box-shadow:0 0 5px rgba(0,0,0,0.3);
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="header">
+    <h1>U.S. Rest Stops and Buc-ee's Locations</h1>
+    <p>Public vs Private Traveler Services</p>
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="reststops.js"></script>
+<script src="bucees.js"></script>
+
+<script>
+
+// Create Map
+
+const map = L.map("map").setView([39, -98], 4);
+
+// Basemaps
+
+const streetMap = L.tileLayer(
+"https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+{
+    attribution:"© OpenStreetMap"
+}
+);
+
+const satelliteMap = L.tileLayer(
+"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+{
+    attribution:"Tiles © Esri"
+}
+);
+
+streetMap.addTo(map);
+
+// Layers
+
+const restStopsLayer = L.layerGroup();
+const buceesLayer = L.layerGroup();
+const bufferLayer = L.layerGroup();
+
+// Rest Stops
+
+RestStops.forEach(stop => {
+
+    L.circleMarker(
+        [Number(stop.lat), Number(stop.lon)],
+        {
+            radius: 4,
+            color: "blue",
+            fillColor: "blue",
+            fillOpacity: 0.7
+        }
+    )
+   .bindPopup(`
+    <b>${stop.name}</b><br>
+    Latitude: ${Number(stop.lat).toFixed(4)}<br>
+    Longitude: ${Number(stop.lon).toFixed(4)}
+`)
+
+    .addTo(restStopsLayer);
+
+});
+
+restStopsLayer.addTo(map);
+
+// Buc-ee's
+
+bucees.forEach(store => {
+
+    L.circleMarker(
+        [Number(store.lat), Number(store.lon)],
+        {
+            radius:8,
+            color:"red",
+            fillColor:"red",
+            fillOpacity:1
+        }
+    )
+  .bindPopup(`
+    <b>${store.name}</b><br>
+    Latitude: ${Number(store.lat).toFixed(4)}<br>
+    Longitude: ${Number(store.lon).toFixed(4)}
+`)
+    .addTo(buceesLayer);
+
+    L.circle(
+        [Number(store.lat), Number(store.lon)],
+        {
+            radius:80467,
+            color:"orange",
+            weight:1,
+            fillOpacity:0.1
+        }
+    )
+    .addTo(bufferLayer);
+
+});
+
+buceesLayer.addTo(map);
+
+// Layer Controls
+
+const baseMaps = {
+    "Street Map": streetMap,
+    "Satellite": satelliteMap
+};
+
+const overlayMaps = {
+    "Rest Stops": restStopsLayer,
+    "Buc-ee's": buceesLayer,
+    "Buc-ee's 50-Mile Buffers": bufferLayer
+};
+
+L.control.layers(
+    baseMaps,
+    overlayMaps
+).addTo(map);
+
+//Analysis
+const analysisButton = L.control({ position: "topright" });
+
+analysisButton.onAdd = function () {
+
+    const div = L.DomUtil.create("div");
+
+    div.innerHTML = `
+        <button id="analysisBtn"
+        style="
+            background:white;
+            border:2px solid #666;
+            padding:8px 12px;
+            cursor:pointer;
+            font-weight:bold;
+            border-radius:4px;
+        ">
+            Analysis
+        </button>
+    `;
+
+    return div;
+};
+
+analysisButton.addTo(map);
+
+// Analysis Popup
+
+document.addEventListener("click", function(e){
+
+    if(e.target && e.target.id === "analysisBtn"){
+
+        L.popup()
+        .setLatLng(map.getCenter())
+        .setContent(`
+            <h3>Analysis Summary</h3>
+
+            <b>Rest Stops:</b> ${RestStops.length}<br>
+            <b>Buc-ee's Locations:</b> ${bucees.length}<br><br>
+
+            Public rest stops are distributed
+            throughout the United States and
+            generally follow major interstate
+            and highway corridors.<br><br>
+
+            Buc-ee's locations are concentrated
+            primarily in Texas and the southeastern
+            United States.<br><br>
+
+            The 50-mile buffer layer illustrates
+            service areas surrounding Buc-ee's
+            travel centers and highlights their
+            relationship to major transportation
+            routes.
+        `)
+        .openOn(map);
+
+    }
+
+});
+
+
+// Legend Button
+
+const legendButton = L.control({ position: "bottomright" });
+
+legendButton.onAdd = function () {
+
+    const div = L.DomUtil.create("div");
+
+    div.innerHTML = `
+        <button id="legendBtn"
+        style="
+            background:white;
+            border:2px solid #666;
+            padding:8px 22px;
+            cursor:pointer;
+            font-weight:bold;
+            border-radius:4px;
+        ">
+            Legend
+        </button>
+    `;
+
+    return div;
+};
+
+legendButton.addTo(map);
+
+
+// Legend Popup
+
+document.addEventListener("click", function(e){
+
+    if(e.target && e.target.id === "legendBtn"){
+
+        L.popup()
+        .setLatLng(map.getCenter())
+        .setContent(`
+            <h3>Map Legend</h3>
+
+            🔵 Public Rest Stops<br><br>
+
+            🔴 Buc-ee's Locations<br><br>
+
+            🟠 50-Mile Buc-ee's Buffer
+        `)
+        .openOn(map);
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>
