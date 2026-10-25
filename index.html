@@ -54,11 +54,11 @@ body{
 
 <script>
 
-// Create Map
+
 
 const map = L.map("map").setView([39, -98], 4);
 
-// Basemaps
+
 
 const streetMap = L.tileLayer(
 "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -76,13 +76,13 @@ const satelliteMap = L.tileLayer(
 
 streetMap.addTo(map);
 
-// Layers
+
 
 const restStopsLayer = L.layerGroup();
 const buceesLayer = L.layerGroup();
 const bufferLayer = L.layerGroup();
 
-// Rest Stops
+
 
 RestStops.forEach(stop => {
 
@@ -107,7 +107,6 @@ RestStops.forEach(stop => {
 
 restStopsLayer.addTo(map);
 
-// Buc-ee's
 
 bucees.forEach(store => {
 
@@ -142,7 +141,7 @@ bucees.forEach(store => {
 
 buceesLayer.addTo(map);
 
-// Layer Controls
+
 
 const baseMaps = {
     "Street Map": streetMap,
@@ -160,7 +159,7 @@ L.control.layers(
     overlayMaps
 ).addTo(map);
 
-//Analysis
+
 const analysisButton = L.control({ position: "topright" });
 
 analysisButton.onAdd = function () {
@@ -186,7 +185,7 @@ analysisButton.onAdd = function () {
 
 analysisButton.addTo(map);
 
-// Analysis Popup
+
 
 document.addEventListener("click", function(e){
 
@@ -222,7 +221,7 @@ document.addEventListener("click", function(e){
 });
 
 
-// Legend Button
+
 
 const legendButton = L.control({ position: "bottomright" });
 
@@ -250,7 +249,7 @@ legendButton.onAdd = function () {
 legendButton.addTo(map);
 
 
-// Legend Popup
+
 
 document.addEventListener("click", function(e){
 
@@ -258,15 +257,18 @@ document.addEventListener("click", function(e){
 
         L.popup()
         .setLatLng(map.getCenter())
-        .setContent(`
-            <h3>Map Legend</h3>
+       .setContent(`
+    <h3>Map Legend</h3>
 
-            🔵 Public Rest Stops<br><br>
+    <span style="color:#0000FF;">●</span>
+    Rest Stops (#0000FF)<br><br>
 
-            🔴 Buc-ee's Locations<br><br>
+    <span style="color:#FF0000;">●</span>
+    Buc-ee's Locations (#FF0000)<br><br>
 
-            🟠 50-Mile Buc-ee's Buffer
-        `)
+    <span style="color:#FFA500;">●</span>
+    50-Mile Buffer (#FFA500)
+`)
         .openOn(map);
 
     }
